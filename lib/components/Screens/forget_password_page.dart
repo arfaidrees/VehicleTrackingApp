@@ -1,7 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import '../common/custom_form_button.dart';
 import '../common/custom_input_field.dart';
 import '../common/page_header.dart';
@@ -16,8 +16,8 @@ class ForgetPasswordPage extends StatefulWidget {
 }
 
 class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
-
   final _forgetPasswordFormKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -32,39 +32,46 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(20),),
+                    top: Radius.circular(20),
+                  ),
                 ),
                 child: SingleChildScrollView(
                   child: Form(
                     key: _forgetPasswordFormKey,
                     child: Column(
                       children: [
-                        const PageHeading(title: 'Forgot Password',),
+                        const PageHeading(title: 'Forgot Password'),
                         CustomInputField(
-                            labelText: 'Email',
-                            hintText: 'Your email id',
-                            isDense: true,
-                            validator: (textValue) {
-                              if (textValue == null || textValue.isEmpty) {
-                                return 'Email is required!';
-                              }
-                              if (!EmailValidator.validate(textValue)) {
-                                return 'Please enter a valid email';
-                              }
-                              return null;
+                          controller: _emailController, // Bind the controller
+                          labelText: 'Email',
+                          hintText: 'Your email id',
+                          isDense: true,
+                          validator: (textValue) {
+                            if (textValue == null || textValue.isEmpty) {
+                              return 'Email is required!';
                             }
+                            if (!EmailValidator.validate(textValue)) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
+                          },
                         ),
-                        const SizedBox(height: 20,),
-                        CustomFormButton(innerText: 'Submit',
-                          onPressed: _handleForgetPassword,),
-                        const SizedBox(height: 20,),
+                        const SizedBox(height: 20),
+                        CustomFormButton(
+                          innerText: 'Submit',
+                          onPressed: _handleForgetPassword,
+                        ),
+                        const SizedBox(height: 20),
                         Container(
                           alignment: Alignment.center,
                           child: GestureDetector(
-                            onTap: () =>
-                            {
-                              Navigator.push(context, MaterialPageRoute(
-                                  builder: (context) => const LoginPage()))
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
+                                ),
+                              );
                             },
                             child: const Text(
                               'Back to login',
@@ -88,15 +95,28 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
     );
   }
 
-  void _handleForgetPassword() {
+  void _handleForgetPassword() async {
     if (_forgetPasswordFormKey.currentState!.validate()) {
-      Get.snackbar(
-        'Submitting data..',
-        '',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xffae2012),
-        colorText: Colors.white,
-      );
+      String email = _emailController.text.trim();
+
+      try {
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+        Get.snackbar(
+          'Success',
+          'Password reset email sent!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xff1c7430),
+          colorText: Colors.white,
+        );
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          'Failed to send reset email: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xffae2012),
+          colorText: Colors.white,
+        );
+      }
     }
   }
 }

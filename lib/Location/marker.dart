@@ -13,10 +13,10 @@ class TextOnImage extends StatelessWidget {
       children: [
         Image(
           image: AssetImage(
-            "assets/images/car.png",
+            "assets/images/Rider.png",
           ),
-          height: 150,
-          width: 150,
+          height: 140,
+          width: 140,
         ),
       ],
     );

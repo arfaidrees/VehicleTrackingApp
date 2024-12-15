@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:vehicle_tracking_app/components/Screens/map_screen.dart';
 
 import 'components/Screens/login_page.dart';
+import 'components/Screens/welcome_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (user != null) {
         Get.off(MapScreen());
       } else {
-        Get.off(const LoginPage());
+        Get.off(const WelcomeScreen());
       }
     });
     checkFirebaseConnection();

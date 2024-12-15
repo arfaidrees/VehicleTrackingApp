@@ -3,11 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '../common/custom_form_button.dart';
 import '../common/custom_input_field.dart';
-import '../common/page_header.dart';
-import '../common/page_heading.dart';
+import '../common/custom_form_button.dart';
 import 'login_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -24,12 +21,12 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _agreePersonalData = true;
 
   Future<void> _pickProfileImage() async {
     try {
       final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image == null) return;
-
       setState(() => _profileImage = File(image.path));
     } on PlatformException catch (e) {
       debugPrint('Failed to pick image: $e');
@@ -58,7 +55,7 @@ class _SignupPageState extends State<SignupPage> {
             const SnackBar(content: Text('Signup Successful!')),
           );
 
-          // Navigate to the LoginPage or home screen
+          // Navigate to the LoginPage
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -86,159 +83,171 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color(0xffEEF1F3),
-        body: SingleChildScrollView(
-          child: Form(
-            key: _signupFormKey,
-            child: Column(
-              children: [
-                const PageHeader(),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
+    return Scaffold(
+      backgroundColor: Colors.grey.shade200,
+      body: Column(
+        children: [
+          const Spacer(flex: 1),
+          Expanded(
+            flex: 8,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(40.0),
+                  topRight: Radius.circular(40.0),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _signupFormKey,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const PageHeading(title: 'Sign-up'),
-                      SizedBox(
-                        width: 130,
-                        height: 130,
-                        child: CircleAvatar(
-                          backgroundColor: Colors.grey.shade200,
-                          backgroundImage:
-                          _profileImage != null ? FileImage(_profileImage!) : null,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                bottom: 5,
-                                right: 5,
-                                child: GestureDetector(
-                                  onTap: _pickProfileImage,
-                                  child: Container(
-                                    height: 50,
-                                    width: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.shade400,
-                                      border: Border.all(color: Colors.white, width: 3),
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt_sharp,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: 30.0,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xff520521)
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20.0),
+                      GestureDetector(
+                        onTap: _pickProfileImage,
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey.shade300,
+                          backgroundImage:
+                          _profileImage != null ? FileImage(_profileImage!) : null,
+                          child: _profileImage == null
+                              ? Icon(Icons.camera_alt, size: 40, color: Colors.grey.shade700)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 20.0),
                       CustomInputField(
-                        labelText: 'Name',
-                        hintText: 'Your name',
-                        isDense: true,
+                        labelText: 'Full Name',
+                        hintText: 'Enter your full name',
                         controller: _nameController,
-                        validator: (textValue) {
-                          if (textValue == null || textValue.isEmpty) {
-                            return 'Name field is required!';
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Full Name is required';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 15.0),
                       CustomInputField(
                         labelText: 'Email',
-                        hintText: 'Your email id',
-                        isDense: true,
+                        hintText: 'Enter your email',
                         controller: _emailController,
-                        validator: (textValue) {
-                          if (textValue == null || textValue.isEmpty) {
-                            return 'Email is required!';
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Email is required';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 15.0),
                       CustomInputField(
-                        labelText: 'Contact no.',
-                        hintText: 'Your contact number',
-                        isDense: true,
+                        labelText: 'Contact Number',
+                        hintText: 'Enter your contact number',
                         controller: _contactController,
-                        validator: (textValue) {
-                          if (textValue == null || textValue.isEmpty) {
-                            return 'Contact number is required!';
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Contact Number is required';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 15.0),
                       CustomInputField(
                         labelText: 'Password',
-                        hintText: 'Your password',
-                        isDense: true,
-                        obscureText: true,
+                        hintText: 'Enter your password',
                         controller: _passwordController,
-                        validator: (textValue) {
-                          if (textValue == null || textValue.isEmpty) {
-                            return 'Password is required!';
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
                           }
                           return null;
                         },
-                        suffixIcon: true,
                       ),
-                      const SizedBox(height: 22),
-                      CustomFormButton(
-                        innerText: 'Signup',
-                        onPressed: _handleSignupUser,
-                      ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 15.0),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Already have an account? ',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xff939393),
-                              fontWeight: FontWeight.bold,
+                          Checkbox(
+                            value: _agreePersonalData,
+                            onChanged: (bool? value) {
+                              setState(() => _agreePersonalData = value!);
+                            },
+                          ),
+                          const Expanded(
+                            child: Text(
+                              'I agree to the processing of personal data',
+                              style: TextStyle(color: Colors.black54),
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 15.0),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xff520521), // Button background color
+                            foregroundColor: Colors.white, // Text color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10), // Optional: for rounded corners
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_signupFormKey.currentState!.validate() &&
+                                _agreePersonalData) {
+                              _handleSignupUser();
+                            } else if (!_agreePersonalData) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please agree to the terms'),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Sign Up'),
+                        ),
+                      ),
+                      const SizedBox(height: 20.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Already have an account? '),
                           GestureDetector(
                             onTap: () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginPage(),
-                                ),
+                                MaterialPageRoute(builder: (context) => const LoginPage()),
                               );
                             },
-                            child: const Text(
-                              'Log-in',
+                            child: Text(
+                              'Sign In',
                               style: TextStyle(
-                                fontSize: 15,
-                                color: Color(0xff748288),
+                                color: Color(0xff520521),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20.0),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
