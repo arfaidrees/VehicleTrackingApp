@@ -1,13 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import 'Profile.dart';
 
 class Menu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> rowsData = [
-      {'text': 'Profile', 'icon': Icons.person_outline, },
-      {'text': 'Setting', 'icon': Icons.settings, },
-      {'text': 'Help', 'icon': Icons.help_center_outlined, 'route': null},
+      {'text': 'Profile', 'icon': Icons.person_outline},
+      {'text': 'Setting', 'icon': Icons.settings},
+      {'text': 'Help', 'icon': Icons.help_center_outlined},
     ];
 
     return Container(
@@ -25,7 +28,7 @@ class Menu extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     child: const Image(
                       fit: BoxFit.cover,
-                      image: const AssetImage('assets/images/vta.png'),
+                      image: AssetImage('assets/images/vta.png'),
                     ),
                   ),
                 ),
@@ -49,19 +52,28 @@ class Menu extends StatelessWidget {
                     NewRow(
                       text: rowData['text'],
                       icon: rowData['icon'],
-                      onTap: rowData['route'] != null
-                          ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => rowData['route'],
-                          ),
-                        );
-                      }
-                          : () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${rowData['text']} is not implemented yet!')),
-                        );
+                      onTap: () {
+                        switch (rowData['text']) {
+                          case 'Profile':
+                            Get.to(ProfilePage());
+                            break;
+                          case 'Setting':
+                            Get.to(Settings());
+                            break;
+                          case 'Help':
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Help is not implemented yet!')),
+                            );
+                            break;
+                          default:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      '${rowData['text']} is not implemented yet!')),
+                            );
+                        }
                       },
                     ),
                     const SizedBox(height: 20),

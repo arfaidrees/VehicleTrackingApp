@@ -1,15 +1,16 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:vehicle_tracking_app/components/Screens/menu.dart';
 import 'package:widget_to_marker/widget_to_marker.dart';
+
 import '../../Location/location.dart';
 import '../../Location/marker.dart';
-import 'dart:ui' as ui;
-import 'menu.dart';
 
 class MapScreen extends StatefulWidget {
   @override
@@ -49,7 +50,7 @@ class _MapScreenState extends State<MapScreen> {
               logicalSize: Size(markerSize, markerSize),
               imageSize: Size(markerSize, markerSize)),
           infoWindow: InfoWindow(title: doc['email']),
-          rotation: doc['bearing'] ?? 0.0,
+          // rotation: 200.0,
         );
       }
       return null;
@@ -60,7 +61,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   double _calculateMarkerSize(double zoom) {
-    return 150.0 * (zoom / _currentZoom);
+    return 150.0 * (zoom / 15.0);
   }
 
   @override
@@ -75,7 +76,7 @@ class _MapScreenState extends State<MapScreen> {
 
   void _updateMarkers() async {
     QuerySnapshot snapshot =
-    await FirebaseFirestore.instance.collection('users').get();
+        await FirebaseFirestore.instance.collection('users').get();
     _createMarkersFromData(snapshot).then((markers) {
       setState(() {
         _markers = {...markers};
@@ -110,7 +111,9 @@ class _MapScreenState extends State<MapScreen> {
             duration: Duration(milliseconds: 300),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: isDrawerOpen ? BorderRadius.circular(40) : BorderRadius.circular(0),
+              borderRadius: isDrawerOpen
+                  ? BorderRadius.circular(40)
+                  : BorderRadius.circular(0),
             ),
             child: Scaffold(
               appBar: AppBar(
@@ -142,7 +145,8 @@ class _MapScreenState extends State<MapScreen> {
                       _mapController.animateCamera(
                         CameraUpdate.newCameraPosition(
                           CameraPosition(
-                            target: LatLng(locationServices.lat.value, locationServices.long.value),
+                            target: LatLng(locationServices.lat.value,
+                                locationServices.long.value),
                             zoom: _currentZoom,
                           ),
                         ),
@@ -158,7 +162,8 @@ class _MapScreenState extends State<MapScreen> {
                 ],
               ),
               body: StreamBuilder(
-                stream: FirebaseFirestore.instance.collection('users').snapshots(),
+                stream:
+                    FirebaseFirestore.instance.collection('users').snapshots(),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
                     try {
@@ -173,13 +178,14 @@ class _MapScreenState extends State<MapScreen> {
                       }
                     }
                     return Obx(
-                          () => GoogleMap(
+                      () => GoogleMap(
                         initialCameraPosition: CameraPosition(
-                          target: LatLng(
-                              locationServices.lat.value, locationServices.long.value),
+                          target: LatLng(locationServices.lat.value,
+                              locationServices.long.value),
                           zoom: _currentZoom,
                         ),
-                        onMapCreated: (GoogleMapController googlemapcontroller) {
+                        onMapCreated:
+                            (GoogleMapController googlemapcontroller) {
                           _mapController = googlemapcontroller;
                           _updateMarkers();
                         },
@@ -187,7 +193,7 @@ class _MapScreenState extends State<MapScreen> {
                           _currentZoom = position.zoom;
                           _updateMarkers();
                         },
-                        mapType: MapType.hybrid,
+                        // mapType: MapType.hybrid,
                         myLocationButtonEnabled: true,
                         markers: _markers,
                       ),

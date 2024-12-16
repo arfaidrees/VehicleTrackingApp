@@ -5,9 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:vehicle_tracking_app/components/Screens/map_screen.dart';
 
-import 'components/Screens/login_page.dart';
+import 'components/Screens/map_screen.dart';
 import 'components/Screens/welcome_page.dart';
 
 void main() async {

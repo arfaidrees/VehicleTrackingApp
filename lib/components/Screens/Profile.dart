@@ -2,15 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ProfilePage extends StatelessWidget {
-  final String profileImageUrl;
-  final String userName;
-  final String userEmail;
-
   ProfilePage({
     Key? key,
-    required this.profileImageUrl,
-    required this.userName,
-    required this.userEmail,
   }) : super(key: key);
 
   @override
@@ -27,7 +20,7 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundImage: NetworkImage(profileImageUrl),
+                    backgroundImage: NetworkImage(""),
                     onBackgroundImageError: (error, stackTrace) => Icon(
                       Icons.person,
                       size: 120,
@@ -36,7 +29,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                   SizedBox(height: 15),
                   Text(
-                    userName,
+                    "USERNAME",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -45,7 +38,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    userEmail,
+                    "EMAILS",
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
@@ -86,10 +79,11 @@ class ProfilePage extends StatelessWidget {
                           SizedBox(width: 10),
                           Text(
                             'Name: ',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            userName,
+                            "USERNAME",
                             style: TextStyle(fontSize: 16),
                           ),
                         ],
@@ -103,10 +97,11 @@ class ProfilePage extends StatelessWidget {
                           SizedBox(width: 10),
                           Text(
                             'Email: ',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            userEmail,
+                            "EMAILS",
                             style: TextStyle(fontSize: 16),
                           ),
                         ],
@@ -124,7 +119,8 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () {
-                      Get.snackbar('Info', 'Edit profile functionality not implemented yet');
+                      Get.snackbar('Info',
+                          'Edit profile functionality not implemented yet');
                     },
                     icon: Icon(Icons.edit, color: Colors.white),
                     label: Text('Edit Profile'),
@@ -139,7 +135,8 @@ class ProfilePage extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () {
                       // Implement Logout Functionality
-                      Get.snackbar('Info', 'Logout functionality not implemented yet');
+                      Get.snackbar(
+                          'Info', 'Logout functionality not implemented yet');
                     },
                     icon: Icon(Icons.logout, color: Colors.white),
                     label: Text('Logout'),
