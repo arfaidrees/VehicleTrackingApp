@@ -20,9 +20,9 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   late GoogleMapController _mapController;
   Set<Marker> _markers = {};
-  final locationServices = Get.put(Location());
+  final _locationServices = Get.find<LocationController>();
   bool isLocationServiceEnabled = false;
-  double _currentZoom = 15.0;
+  double _currentZoom = 20.0;
 
   double xOffset = 0;
   double yOffset = 0;
@@ -67,7 +67,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     _mapController.dispose();
-    locationServices.dispose();
+    _locationServices.dispose();
     super.dispose();
     if (kDebugMode) {
       print("MapScreen disposed");
@@ -78,9 +78,11 @@ class _MapScreenState extends State<MapScreen> {
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('users').get();
     _createMarkersFromData(snapshot).then((markers) {
-      setState(() {
-        _markers = {...markers};
-      });
+      if (mounted) {
+        setState(() {
+          _markers = {...markers};
+        });
+      }
     });
   }
 
@@ -108,7 +110,7 @@ class _MapScreenState extends State<MapScreen> {
             transform: Matrix4.translationValues(xOffset, yOffset, 0)
               ..scale(isDrawerOpen ? 0.85 : 1.00)
               ..rotateZ(isDrawerOpen ? (isRtl ? 50 : -50) : 0),
-            duration: Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: isDrawerOpen
@@ -133,9 +135,9 @@ class _MapScreenState extends State<MapScreen> {
                         isLocationServiceEnabled = value;
                       });
                       if (value) {
-                        locationServices.getlocation();
+                        _locationServices.getlocation();
                       } else {
-                        locationServices.stopLocationUpdates();
+                        _locationServices.stopLocationUpdates();
                       }
                     },
                   ),
@@ -145,19 +147,13 @@ class _MapScreenState extends State<MapScreen> {
                       _mapController.animateCamera(
                         CameraUpdate.newCameraPosition(
                           CameraPosition(
-                            target: LatLng(locationServices.lat.value,
-                                locationServices.long.value),
+                            target: LatLng(_locationServices.lat.value,
+                                _locationServices.long.value),
                             zoom: _currentZoom,
                           ),
                         ),
                       );
                     },
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      locationServices.signOut();
-                    },
-                    icon: const Icon(Icons.logout),
                   ),
                 ],
               ),
@@ -168,20 +164,22 @@ class _MapScreenState extends State<MapScreen> {
                   if (snapshot.hasData) {
                     try {
                       _createMarkersFromData(snapshot.data!).then((markers) {
-                        setState(() {
-                          _markers = {...markers};
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _markers = {...markers};
+                          });
+                        }
                       });
                     } catch (e) {
                       if (kDebugMode) {
                         print("W100 ${e.toString()}");
                       }
                     }
-                    return Obx(
-                      () => GoogleMap(
+                    return Obx(() {
+                      return GoogleMap(
                         initialCameraPosition: CameraPosition(
-                          target: LatLng(locationServices.lat.value,
-                              locationServices.long.value),
+                          target: LatLng(_locationServices.lat.value,
+                              _locationServices.long.value),
                           zoom: _currentZoom,
                         ),
                         onMapCreated:
@@ -196,8 +194,8 @@ class _MapScreenState extends State<MapScreen> {
                         // mapType: MapType.hybrid,
                         myLocationButtonEnabled: true,
                         markers: _markers,
-                      ),
-                    );
+                      );
+                    });
                   } else {
                     return const Center(
                       child: CircularProgressIndicator(),

@@ -6,7 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'components/Screens/map_screen.dart';
+import 'Location/location.dart';
+import 'components/Screens/Navi.dart';
 import 'components/Screens/welcome_page.dart';
 
 void main() async {
@@ -50,9 +51,12 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     User? user = _auth.currentUser;
-    _timer = Timer(const Duration(seconds: 2), () {
+    _timer = Timer(const Duration(seconds: 2), () async {
       if (user != null) {
-        Get.off(MapScreen());
+        final locationcontroller = Get.put(LocationController());
+        await locationcontroller.getCurrentLocation();
+        await locationcontroller.initFirebaseAndLocation();
+        Get.off(menustack());
       } else {
         Get.off(const WelcomeScreen());
       }
@@ -78,6 +82,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xffEEF1F3),
       body: Center(
         child: Image.asset('assets/images/vta.png'),
       ),

@@ -1,14 +1,16 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../Repository/firebaseRepository.dart';
 import '../common/custom_input_field.dart';
-import '../common/custom_form_button.dart';
 import 'login_page.dart';
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+  const SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -22,6 +24,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _agreePersonalData = true;
+  final FirebaseRepository _firebaseRepository = FirebaseRepository();
 
   Future<void> _pickProfileImage() async {
     try {
@@ -39,43 +42,25 @@ class _SignupPageState extends State<SignupPage> {
         const SnackBar(content: Text('Submitting data...')),
       );
 
-      try {
-        String name = _nameController.text.trim();
-        String email = _emailController.text.trim();
-        String contact = _contactController.text.trim();
-        String password = _passwordController.text.trim();
+      String name = _nameController.text.trim();
+      String email = _emailController.text.trim();
+      String contact = _contactController.text.trim();
+      String password = _passwordController.text.trim();
 
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+      String? errorMessage = await _firebaseRepository
+          .createUserWithEmailAndPassword(email, password, name, contact);
 
-        User? user = userCredential.user;
-        if (user != null) {
-          // Successfully signed up
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Signup Successful!')),
-          );
+      if (errorMessage == null) {
+        // Successfully signed up
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signup Successful!')),
+        );
 
-          // Navigate to the LoginPage
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          );
-        }
-      } on FirebaseAuthException catch (e) {
-        String errorMessage;
-        if (e.code == 'email-already-in-use') {
-          errorMessage = 'The email address is already in use.';
-        } else if (e.code == 'weak-password') {
-          errorMessage = 'The password provided is too weak.';
-        } else {
-          errorMessage = 'An error occurred: ${e.message}';
-        }
+        // Navigate to the LoginPage
+        Get.off(const LoginPage());
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred: $e')),
         );
       }
     }
@@ -105,13 +90,12 @@ class _SignupPageState extends State<SignupPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Create Account',
                         style: TextStyle(
-                          fontSize: 30.0,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xff520521)
-                        ),
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xff520521)),
                       ),
                       const SizedBox(height: 20.0),
                       GestureDetector(
@@ -119,10 +103,12 @@ class _SignupPageState extends State<SignupPage> {
                         child: CircleAvatar(
                           radius: 60,
                           backgroundColor: Colors.grey.shade300,
-                          backgroundImage:
-                          _profileImage != null ? FileImage(_profileImage!) : null,
+                          backgroundImage: _profileImage != null
+                              ? FileImage(_profileImage!)
+                              : null,
                           child: _profileImage == null
-                              ? Icon(Icons.camera_alt, size: 40, color: Colors.grey.shade700)
+                              ? Icon(Icons.camera_alt,
+                                  size: 40, color: Colors.grey.shade700)
                               : null,
                         ),
                       ),
@@ -197,10 +183,12 @@ class _SignupPageState extends State<SignupPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xff520521), // Button background color
+                            backgroundColor: const Color(
+                                0xff520521), // Button background color
                             foregroundColor: Colors.white, // Text color
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10), // Optional: for rounded corners
+                              borderRadius: BorderRadius.circular(
+                                  10), // Optional: for rounded corners
                             ),
                           ),
                           onPressed: () {
@@ -227,10 +215,11 @@ class _SignupPageState extends State<SignupPage> {
                             onTap: () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => const LoginPage()),
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginPage()),
                               );
                             },
-                            child: Text(
+                            child: const Text(
                               'Sign In',
                               style: TextStyle(
                                 color: Color(0xff520521),

@@ -1,14 +1,16 @@
-import 'package:flutter/material.dart';
+// login_page.dart
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:location/location.dart';
-import 'package:vehicle_tracking_app/components/Screens/map_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:vehicle_tracking_app/components/Screens/signup_page.dart';
-import 'package:vehicle_tracking_app/components/Screens/forget_password_page.dart';
+
+import '../../Location/location.dart';
+import '../../Repository/firebaseRepository.dart';
 import 'Navi.dart';
+import 'forget_password_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -20,10 +22,13 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   bool rememberPassword = true;
   bool isPasswordVisible = false;
+  final FirebaseRepository _firebaseRepository = FirebaseRepository();
+  final _locationController = Get.put(LocationController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xffEEF1F3),
       body: Column(
         children: [
           const Expanded(
@@ -47,12 +52,12 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Welcome Back',
                         style: TextStyle(
                           fontSize: 30.0,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xff520521),
+                          color: Color(0xff520521),
                         ),
                       ),
                       const SizedBox(height: 40.0),
@@ -108,8 +113,10 @@ class _LoginPageState extends State<LoginPage> {
                               });
                             },
                             child: Icon(
-                              isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                              color: Color(0xFF520521),
+                              isPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: const Color(0xFF520521),
                             ),
                           ),
                         ),
@@ -139,14 +146,15 @@ class _LoginPageState extends State<LoginPage> {
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const ForgetPasswordPage(),
+                                builder: (context) =>
+                                    const ForgetPasswordPage(),
                               ),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Forget password?',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xff520521),
+                                color: Color(0xff520521),
                               ),
                             ),
                           ),
@@ -157,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xff520521),
+                            backgroundColor: const Color(0xff520521),
                             foregroundColor: Colors.white, // Text color
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -182,11 +190,11 @@ class _LoginPageState extends State<LoginPage> {
                                 builder: (context) => const SignupPage(),
                               ),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Sign up',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xff520521),
+                                color: Color(0xff520521),
                               ),
                             ),
                           ),
@@ -205,44 +213,25 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLoginUser() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Submitting data...')),
+    );
     if (_loginFormKey.currentState!.validate()) {
-      try {
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
+      String? errorMessage =
+          await _firebaseRepository.signInWithEmailAndPassword(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
 
-        User? user = userCredential.user;
+      if (errorMessage == null) {
+        User? user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          Location location = Location();
-          bool serviceEnabled = await location.serviceEnabled();
-          if (!serviceEnabled) {
-            serviceEnabled = await location.requestService();
-            if (!serviceEnabled) return;
-          }
-
-          PermissionStatus permissionGranted = await location.hasPermission();
-          if (permissionGranted == PermissionStatus.denied) {
-            permissionGranted = await location.requestPermission();
-            if (permissionGranted != PermissionStatus.granted) return;
-          }
-
-          LocationData userLocation = await location.getLocation();
-
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-            'email': emailController.text,
-            'latitude': userLocation.latitude,
-            'longitude': userLocation.longitude,
-          });
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => menustack()),
-          );
+          _locationController.initFirebaseAndLocation();
+          Get.off(menustack());
         }
-      } catch (e) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}')),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     }

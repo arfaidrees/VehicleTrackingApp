@@ -7,11 +7,12 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:vehicle_tracking_app/components/Screens/Navi.dart';
 import 'package:vehicle_tracking_app/components/Screens/login_page.dart';
 
 import '../Models/locationModels.dart';
 
-class Location extends GetxController {
+class LocationController extends GetxController {
   late LocationSettings locationSettings;
   RxDouble long = 0.0.obs;
   RxDouble lat = 0.0.obs;
@@ -22,23 +23,45 @@ class Location extends GetxController {
   late FirebaseAuth _auth;
   String? uid;
   String? email;
+  late locationModels locationData;
 
   Location() {
+    getCurrentLocation();
+  }
+
+  Future<void> initFirebaseAndLocation() async {
+    // getCurrentLocation();
     _auth = FirebaseAuth.instance;
     fireStore = FirebaseFirestore.instance;
     uid = _auth.currentUser!.uid;
     _positionStreamController = StreamController<Position>.broadcast();
     email = _auth.currentUser?.email;
-    getuserdata().then((value) {
-      Geolocator.getCurrentPosition().then((value) {
-        long.value = value.longitude;
-        lat.value = value.latitude;
-      });
-    });
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      locationSettings = AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+        intervalDuration: const Duration(seconds: 0),
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      locationSettings = AppleSettings(
+        accuracy: LocationAccuracy.high,
+        activityType: ActivityType.fitness,
+        distanceFilter: 100,
+        pauseLocationUpdatesAutomatically: true,
+        showBackgroundLocationIndicator: false,
+      );
+    } else {
+      locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+      );
+    }
+    Get.off(menustack());
   }
 
   Future<void> getuserdata() async {
-    _auth = FirebaseAuth.instance;
     fireStore
         .collection('users')
         .doc(_auth.currentUser!.uid)
@@ -59,39 +82,20 @@ class Location extends GetxController {
 
   Future<void> getlocation() async {
     await Geolocator.requestPermission();
-
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      locationSettings = AndroidSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 0,
-        forceLocationManager: true,
-        intervalDuration: const Duration(seconds: 1),
-      );
-    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
-        defaultTargetPlatform == TargetPlatform.macOS) {
-      locationSettings = AppleSettings(
-        accuracy: LocationAccuracy.high,
-        activityType: ActivityType.fitness,
-        distanceFilter: 100,
-        pauseLocationUpdatesAutomatically: true,
-        showBackgroundLocationIndicator: false,
-      );
-    } else {
-      locationSettings = const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 100,
-      );
-    }
-
+    saveLocation();
     _positionSubscription =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position position) async {
-      print("REPEAT");
+      if (kDebugMode) {
+        print("REPEAT");
+      }
       lat.value = position.latitude;
       long.value = position.longitude;
       saveLocation();
       _positionStreamController.add(position);
-      print(position.toString());
+      if (kDebugMode) {
+        print(position.toString());
+      }
     });
 
     // Listen to device orientation changes using magnetometer sensor
@@ -101,8 +105,15 @@ class Location extends GetxController {
     });
   }
 
+  Future<void> getCurrentLocation() async {
+    await Geolocator.requestPermission();
+    Position position = await Geolocator.getCurrentPosition();
+    long.value = position.longitude;
+    lat.value = position.latitude;
+  }
+
   Future<void> saveLocation() async {
-    locationModels userlocation = locationModels(
+    locationData = locationModels(
         email: email ?? "",
         longitude: long.value,
         latitude: lat.value,
@@ -110,7 +121,7 @@ class Location extends GetxController {
     await fireStore
         .collection('users')
         .doc(uid)
-        .set(userlocation.toJson())
+        .set(locationData.toJson())
         .then((value) {
       print('Location Update');
     }).onError((error, stackTrace) {

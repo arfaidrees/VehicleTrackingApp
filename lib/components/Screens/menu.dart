@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../Repository/firebaseRepository.dart';
 import 'Profile.dart';
 
 class Menu extends StatelessWidget {
@@ -12,6 +13,7 @@ class Menu extends StatelessWidget {
       {'text': 'Setting', 'icon': Icons.settings},
       {'text': 'Help', 'icon': Icons.help_center_outlined},
     ];
+    final FirebaseRepository _firebaseRepository = FirebaseRepository();
 
     return Container(
       color: const Color(0xFF520521),
@@ -58,7 +60,7 @@ class Menu extends StatelessWidget {
                             Get.to(ProfilePage());
                             break;
                           case 'Setting':
-                            Get.to(Settings());
+                            Get.to(const Settings());
                             break;
                           case 'Help':
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -83,18 +85,23 @@ class Menu extends StatelessWidget {
             ),
 
             // Logout Row
-            Row(
-              children: <Widget>[
-                Icon(
-                  Icons.logout,
-                  color: Colors.white.withOpacity(0.5),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Log Out',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5)),
-                ),
-              ],
+            InkWell(
+              onTap: () {
+                _firebaseRepository.signOut();
+              },
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.logout,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Log Out',
+                    style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

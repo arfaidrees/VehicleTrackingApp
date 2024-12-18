@@ -1,7 +1,8 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../Repository/firebaseRepository.dart';
 import '../common/custom_form_button.dart';
 import '../common/custom_input_field.dart';
 import '../common/page_header.dart';
@@ -98,23 +99,18 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   void _handleForgetPassword() async {
     if (_forgetPasswordFormKey.currentState!.validate()) {
       String email = _emailController.text.trim();
+      FirebaseRepository firebaseRepository = FirebaseRepository();
 
-      try {
-        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      String? result = await firebaseRepository.sendPasswordResetEmail(email);
+      if (result == null) {
         Get.snackbar(
           'Success',
           'Password reset email sent!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: const Color(0xff1c7430),
-          colorText: Colors.white,
         );
-      } catch (e) {
+      } else {
         Get.snackbar(
           'Error',
-          'Failed to send reset email: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: const Color(0xffae2012),
-          colorText: Colors.white,
+          'Failed to send reset email: $result',
         );
       }
     }
