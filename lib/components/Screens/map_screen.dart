@@ -22,7 +22,7 @@ class _MapScreenState extends State<MapScreen> {
   Set<Marker> _markers = {};
   final _locationServices = Get.find<LocationController>();
   bool isLocationServiceEnabled = false;
-  double _currentZoom = 20.0;
+  double _currentZoom = 15.0;
 
   double xOffset = 0;
   double yOffset = 0;
@@ -147,8 +147,14 @@ class _MapScreenState extends State<MapScreen> {
                       _mapController.animateCamera(
                         CameraUpdate.newCameraPosition(
                           CameraPosition(
-                            target: LatLng(_locationServices.lat.value,
-                                _locationServices.long.value),
+                            target: LatLng(
+                              _locationServices.lat.value == 0.0
+                                  ? 30.3753
+                                  : _locationServices.lat.value,
+                              _locationServices.long.value == 0.0
+                                  ? 69.3451
+                                  : _locationServices.long.value,
+                            ),
                             zoom: _currentZoom,
                           ),
                         ),
@@ -178,8 +184,14 @@ class _MapScreenState extends State<MapScreen> {
                     return Obx(() {
                       return GoogleMap(
                         initialCameraPosition: CameraPosition(
-                          target: LatLng(_locationServices.lat.value,
-                              _locationServices.long.value),
+                          target: LatLng(
+                            _locationServices.lat.value == 0.0
+                                ? 30.3753
+                                : _locationServices.lat.value,
+                            _locationServices.long.value == 0.0
+                                ? 69.3451
+                                : _locationServices.long.value,
+                          ),
                           zoom: _currentZoom,
                         ),
                         onMapCreated:
