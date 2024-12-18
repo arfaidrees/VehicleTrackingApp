@@ -24,6 +24,34 @@ class _LoginPageState extends State<LoginPage> {
   bool isPasswordVisible = false;
   final FirebaseRepository _firebaseRepository = FirebaseRepository();
   final _locationController = Get.put(LocationController());
+  RxBool isLoading = false.obs;
+
+  Future<void> _handleLoginUser() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Submitting data...')),
+    );
+    if (_loginFormKey.currentState!.validate()) {
+      isLoading.value = true;
+      String? errorMessage =
+          await _firebaseRepository.signInWithEmailAndPassword(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (errorMessage == null) {
+        User? user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          _locationController.initFirebaseAndLocation();
+          Get.off(menustack());
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+      isLoading.value = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +200,13 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           onPressed: _handleLoginUser,
-                          child: const Text('Login'),
+                          child: Obx(
+                            () => isLoading.value
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : const Text('Login'),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 25.0),
@@ -210,30 +244,5 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _handleLoginUser() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Submitting data...')),
-    );
-    if (_loginFormKey.currentState!.validate()) {
-      String? errorMessage =
-          await _firebaseRepository.signInWithEmailAndPassword(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-
-      if (errorMessage == null) {
-        User? user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          _locationController.initFirebaseAndLocation();
-          Get.off(menustack());
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      }
-    }
   }
 }

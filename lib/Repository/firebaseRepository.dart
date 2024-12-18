@@ -9,8 +9,8 @@ class FirebaseRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Create user with email, password, name, and contact number
-  Future<String?> createUserWithEmailAndPassword(
-      String email, String password, String name, String contact) async {
+  Future<String?> createUserWithEmailAndPassword(String email, String password,
+      String name, String contact, String profileURL) async {
     try {
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
@@ -19,7 +19,7 @@ class FirebaseRepository {
       );
       User? user = userCredential.user;
       if (user != null) {
-        await setupProfile(user.uid, name, email, contact);
+        await setupProfile(user.uid, name, email, contact, profileURL);
       }
       return null; // No error
     } on FirebaseAuthException catch (e) {
@@ -58,13 +58,14 @@ class FirebaseRepository {
   }
 
   // Profile setup to save details in Firestore collection as ProfileData
-  Future<void> setupProfile(
-      String userId, String username, String email, String contact) async {
+  Future<void> setupProfile(String userId, String username, String email,
+      String contact, String profileUrl) async {
     try {
       await _firestore.collection('ProfileData').doc(userId).set({
         'username': username,
         'email': email,
         'contact': contact,
+        'profileUrl': profileUrl,
       });
     } catch (e) {
       if (kDebugMode) {

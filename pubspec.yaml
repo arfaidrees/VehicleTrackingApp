@@ -53,6 +53,8 @@ dependencies:
   widget_to_marker: ^1.0.6
   sensors_plus: ^6.1.0
   cached_network_image: ^3.4.1
+  googleapis: ^13.2.0
+  googleapis_auth: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +83,7 @@ flutter:
 
 
     - assets/images/
+    - assets/files/secret.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

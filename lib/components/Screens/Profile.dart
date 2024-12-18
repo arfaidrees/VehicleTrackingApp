@@ -1,7 +1,9 @@
 // ProfilePage.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../Repository/driveRepository.dart';
 import '../../Repository/firebaseRepository.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -16,23 +18,32 @@ class _ProfilePageState extends State<ProfilePage> {
   String username = "USERNAME";
   String email = "EMAILS";
   String contact = "CONTACT";
+  late DriveRepository driveRepository;
+  late var driveApi;
+  late String folderId;
+  String url = "";
 
   @override
   void initState() {
     super.initState();
-    _loadProfileData();
+    mainnn();
+  }
+
+  mainnn() async {
+    await _loadProfileData();
   }
 
   Future<void> _loadProfileData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       Map<String, dynamic>? data =
-      await _firebaseRepository.getProfileData(user.uid);
+          await _firebaseRepository.getProfileData(user.uid);
       if (data != null) {
         setState(() {
           username = data['username'] ?? "USERNAME";
           email = data['email'] ?? "EMAILS";
           contact = data['contact'] ?? "CONTACT";
+          url = data['profileUrl'] ?? "";
         });
       }
     }
@@ -47,17 +58,30 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             // Profile Header
             Container(
+              // color: const Color(0xFF520521),
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Column(
                 children: [
                   CircleAvatar(
-                    radius: 80,
-                    backgroundImage:
-                    const AssetImage('assets/images/default.png'),
-                    onBackgroundImageError: (error, stackTrace) => const Icon(
-                      Icons.person,
-                      size: 140,
-                      color: Colors.white,
+                    radius: 60,
+                    backgroundImage: CachedNetworkImageProvider(url),
+                    child: CachedNetworkImage(
+                      imageUrl: url,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                      errorWidget: (context, url, error) => const Center(
+                        child: Icon(
+                          Icons.person,
+                          size: 140,
+                          color: Colors.white,
+                        ),
+                      ),
+                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                        radius: 60,
+                        backgroundImage: imageProvider,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -81,10 +105,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   // Name
                   ListTile(
                     leading: const Icon(Icons.person, color: Color(0xFF520521)),
-                    title: Text(
+                    title: const Text(
                       'Name',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       username,
@@ -96,10 +120,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   // Email
                   ListTile(
                     leading: const Icon(Icons.email, color: Color(0xFF520521)),
-                    title: Text(
+                    title: const Text(
                       'Email',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       email,
@@ -111,10 +135,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   // Contact
                   ListTile(
                     leading: const Icon(Icons.phone, color: Color(0xFF520521)),
-                    title: Text(
+                    title: const Text(
                       'Contact',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       contact,

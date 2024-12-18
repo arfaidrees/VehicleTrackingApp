@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vehicle_tracking_app/Repository/driveRepository.dart';
 
 import '../../Repository/firebaseRepository.dart';
 import '../common/custom_input_field.dart';
@@ -25,6 +26,40 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _agreePersonalData = true;
   final FirebaseRepository _firebaseRepository = FirebaseRepository();
+  late DriveRepository driveRepository;
+  late dynamic driveApi;
+  late String folderId;
+  RxBool isLoading = false.obs;
+
+  initState() {
+    super.initState();
+    getData();
+  }
+
+  // Future<String> loadAsset(String path) async {
+  //   return await rootBundle.loadString(path);
+  // }
+
+  getData() async {
+    const serviceAccountKey = '''{
+  "type": "service_account",
+  "project_id": "dulcet-bucksaw-445110-g0",
+  "private_key_id": "7569bc919a316305387ef735eb2be7d3aff54bad",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCyIMJlX6awcC03\\nGhTXDXKG53zIgGzAdE26MjLhBBjyXBflBUBt+QoKmRfEgdqjkDDIGUEBU7RCrSd1\\n6BVP8DFXxG/pMFlKE66iAhAVCgM51Y1xriMOXV7sez03S9Wk5tCys51QAqRHbFZ1\\nPQY1r8g9GYC4hlfu7FQ15FXzlmkmwt5cjXrMGZTTtrPV0n9VgLXrlVtTmYn9TI7F\\nFnRS0ppM+ONuifw0h1EKnGilYjDblJyzIPUUuv5SdMT4doz+wysqJY+XpGYm0fA7\\nuaYSeR7mgxWLe4nTdK91B7gS6XV1vKOktk9O/Rg+t0CbRVxP+wOjwElCcbeK7r00\\nhQtD4IhvAgMBAAECggEAIoUHtzaQqpuqn4WN6VkhSzR8Maz1plxDneRRiNrO7NTd\\nCpR4dndvMzuU6A+UK+NrGLQQLW4nvk4pGgfmbW3qWgxm9aVZgGoNCzdkH3enxWL1\\nvMSW5ZdBqIl/hQJMvl6+rgrx3woMBQ1hOeogFHJi1zhkgh4C13n0HdeIsqKA8TI6\\nQ1criGNq+6GqWHnIXbvqiQrClS4WspnaY6zoz3lDXYVrq2UfQSvTSEoU93VFxSew\\njKIc4O6d1gqvBX9GrQrfXHChykABA/hPTLuRlq7Wo/4eXs/JmQO1L8DvOl2mpt96\\n2tQCyG4ifAOCpncds3FjBIfNYlwjCdEj4sWnu9xJ6QKBgQDtYTImdks+Xld3hBOt\\n8fDSkV2WJeF8tTSlP7zLh2FrVo7HQvfVCByYDujGfVzaBkLeea5LHS4IBhkEI/CS\\nVApKKuUcdPGraH+4izygRHU9WUIlVuZpD1mZ+sdb/k3Ml2UapxzzwpV9ugF2PWN6\\nB2GTcj43CLOkAYluo3p+k/H0OQKBgQDAGbv2kKoeZticDPfavcSDA63iyjtvhX/u\\nU+PIiKQxdM0dp8pq2o8YpQAc4Se7Yukn7fzy2kiBLLZGkO6WwPv47UWqaunkmW2I\\n1Eyj4OSzxO5o1aGbV8R8mZUhBoLJMwmlJK+B8CRDBnqeAy6WOzGC3DLTr6ifH2iE\\njtp3NcBx5wKBgE7lXRu3eW6zQHLyrO/FV/tEYUyELpuaRnMd6gvjZRed3zqPIXvm\\nhEptuiQuimvUZOk4nBtPCXuVOz9LCqw3zmu0Mg3xOFl2E+0sKexClIzdW8S5Sz9j\\n4K3y0cvbi9QSBYKERHUoGTN+XPoFkUh/p4iwEcmM1NgPwrPJFe94EJTRAoGAeMX1\\nIZBUFCcO2hVhIpoaWVBP23zPn06sXrdJR0N5D0rixlk+bq2YN6NNDdsUsr/93EfI\\ntxo7aVMmCfmGtyr/f8IVAY6UHE/FyLfIs2NqBgey6CAfqV2lv7yDQK8qPLqkvrnw\\nyd2jvqvtHTjc6kCu4Rn1rpcKiXgiquxxN2+I3VMCgYAYpNhxle6VDgYROwtQfYjz\\nrawrwOS22Zm0gxFBnp4qWgyABHr+as6p4jyypnaDGFLlvgaCtEJWt8UTOlNBGSvO\\n2qnxc9Vk+1n6Fg/1uAjwHj224iUyKURFwM+im5v7vLoCK8//Z9p04I5vgFBRHHva\\n45phicwMwI5fv0ypKABV6g==\\n-----END PRIVATE KEY-----\\n",
+  "client_email": "profile-image-uploader@dulcet-bucksaw-445110-g0.iam.gserviceaccount.com",
+  "client_id": "116108050047817004671",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/profile-image-uploader%40dulcet-bucksaw-445110-g0.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
+''';
+    driveRepository = DriveRepository(serviceAccountKey);
+    driveApi = await driveRepository.authenticateServiceAccount();
+    folderId = await driveRepository.getOrCreateFolder(driveApi);
+    print("AAAAA ${folderId.toString()}");
+  }
 
   Future<void> _pickProfileImage() async {
     try {
@@ -36,7 +71,7 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
-  Future<void> _handleSignupUser() async {
+  Future<void> _handleSignupUser({String profileURL = ""}) async {
     if (_signupFormKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Submitting data...')),
@@ -47,8 +82,9 @@ class _SignupPageState extends State<SignupPage> {
       String contact = _contactController.text.trim();
       String password = _passwordController.text.trim();
 
-      String? errorMessage = await _firebaseRepository
-          .createUserWithEmailAndPassword(email, password, name, contact);
+      String? errorMessage =
+          await _firebaseRepository.createUserWithEmailAndPassword(
+              email, password, name, contact, profileURL);
 
       if (errorMessage == null) {
         // Successfully signed up
@@ -191,10 +227,25 @@ class _SignupPageState extends State<SignupPage> {
                                   10), // Optional: for rounded corners
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             if (_signupFormKey.currentState!.validate() &&
                                 _agreePersonalData) {
-                              _handleSignupUser();
+                              isLoading.value = true;
+                              try {
+                                if (_profileImage == null) {
+                                  await _handleSignupUser();
+                                } else {
+                                  String url =
+                                      await driveRepository.uploadImageToFolder(
+                                          driveApi,
+                                          folderId,
+                                          _profileImage!,
+                                          _emailController.text);
+                                  await _handleSignupUser(profileURL: url);
+                                }
+                              } finally {
+                                isLoading.value = false;
+                              }
                             } else if (!_agreePersonalData) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -203,7 +254,13 @@ class _SignupPageState extends State<SignupPage> {
                               );
                             }
                           },
-                          child: const Text('Sign Up'),
+                          child: Obx(
+                            () => isLoading.value == true
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : const Text('Sign Up'),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20.0),
