@@ -3,14 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../Repository/firebaseRepository.dart';
+import 'Help.dart';
 import 'Profile.dart';
+import 'about.dart';
 
 class Menu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> rowsData = [
       {'text': 'Profile', 'icon': Icons.person_outline},
-      {'text': 'Setting', 'icon': Icons.settings},
+      {'text': 'About', 'icon': Icons.info_outline},
       {'text': 'Help', 'icon': Icons.help_center_outlined},
     ];
     final FirebaseRepository _firebaseRepository = FirebaseRepository();
@@ -36,7 +38,7 @@ class Menu extends StatelessWidget {
                 ),
                 const SizedBox(height: 120, width: 10),
                 const Text(
-                  'Menu',
+                  'Setting',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -59,15 +61,12 @@ class Menu extends StatelessWidget {
                           case 'Profile':
                             Get.to(ProfilePage());
                             break;
-                          case 'Setting':
-                            Get.to(const Settings());
+                          case 'About':
+                            Get.to(const AboutPage());
                             break;
                           case 'Help':
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Help is not implemented yet!')),
-                            );
+                          Get.to(const HelpPage());
+
                             break;
                           default:
                             ScaffoldMessenger.of(context).showSnackBar(
