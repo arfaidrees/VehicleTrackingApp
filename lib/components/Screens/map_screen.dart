@@ -1,6 +1,16 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:vehicle_tracking_app/components/Screens/menu.dart';
+import 'package:widget_to_marker/widget_to_marker.dart';
+
+import '../../Location/location.dart';
+import '../../Location/marker.dart';
 
 class MapScreen extends StatefulWidget {
   @override
@@ -10,65 +20,204 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   late GoogleMapController _mapController;
   Set<Marker> _markers = {};
+  final _locationServices = Get.find<LocationController>();
+  bool isLocationServiceEnabled = false;
+  double _currentZoom = 15.0;
+
+  double xOffset = 0;
+  double yOffset = 0;
+  bool isDrawerOpen = false;
+
+  bool get isRtl => Localizations.localeOf(context).languageCode == 'ur';
 
   @override
   void initState() {
     super.initState();
-    _loadMarkersOnce(); // Fetch markers once
   }
 
-  Future<void> _loadMarkersOnce() async {
-    try {
-      QuerySnapshot snapshot =
-      await FirebaseFirestore.instance.collection('users').get();
-      Set<Marker> markers = snapshot.docs.map((doc) {
-        // Validate Firestore data
-        final lat = doc['latitude'];
-        final lng = doc['longitude'];
+  Future<Set<Marker>> _createMarkersFromData(QuerySnapshot snapshot) async {
+    var futures = snapshot.docs.map((doc) async {
+      final lat = doc['latitude'];
+      final lng = doc['longitude'];
+      if (lat != null && lng != null) {
+        double markerSize = _calculateMarkerSize(_currentZoom);
+        return Marker(
+          markerId: MarkerId(doc.id),
+          position: LatLng(lat, lng),
+          icon: await TextOnImage(
+            text: doc['email'],
+          ).toBitmapDescriptor(
+              logicalSize: Size(markerSize, markerSize),
+              imageSize: Size(markerSize, markerSize)),
+          infoWindow: InfoWindow(title: doc['email']),
+          // rotation: 200.0,
+        );
+      }
+      return null;
+    });
 
-        if (lat is double && lng is double) {
-          return Marker(
-            markerId: MarkerId(doc.id),
-            position: LatLng(lat, lng),
-            infoWindow: InfoWindow(title: doc['email']),
-          );
-        }
-        return null;
-      }).whereType<Marker>().toSet();
+    var markers = await Future.wait(futures);
+    return markers.whereType<Marker>().toSet();
+  }
 
-      setState(() {
-        _markers = markers;
-      });
+  double _calculateMarkerSize(double zoom) {
+    return 150.0 * (zoom / 15.0);
+  }
 
-      _updateCameraPosition();
-    } catch (e) {
-      debugPrint('Error loading markers: $e');
+  @override
+  void dispose() {
+    _mapController.dispose();
+    _locationServices.dispose();
+    super.dispose();
+    if (kDebugMode) {
+      print("MapScreen disposed");
     }
   }
 
-  void _updateCameraPosition() {
-    if (_markers.isNotEmpty) {
-      final firstMarker = _markers.first.position;
-      _mapController.animateCamera(
-        CameraUpdate.newLatLngZoom(firstMarker, 15), // Adjust zoom as needed
-      );
-    }
+  void _updateMarkers() async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    _createMarkersFromData(snapshot).then((markers) {
+      if (mounted) {
+        setState(() {
+          _markers = {...markers};
+        });
+      }
+    });
+  }
+
+  void _toggleDrawer() {
+    setState(() {
+      if (isDrawerOpen) {
+        xOffset = 0;
+        yOffset = 0;
+      } else {
+        xOffset = isRtl ? -290 : 290;
+        yOffset = 80;
+      }
+      isDrawerOpen = !isDrawerOpen;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: CameraPosition(
-          target: LatLng(32.4945, 74.5229), // Default location
-          zoom: 10,
-        ),
-        markers: _markers,
-        onMapCreated: (controller) {
-          _mapController = controller;
-          _updateCameraPosition();
-        },
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          Menu(),
+          AnimatedContainer(
+            transform: Matrix4.translationValues(xOffset, yOffset, 0)
+              ..scale(isDrawerOpen ? 0.85 : 1.00)
+              ..rotateZ(isDrawerOpen ? (isRtl ? 50 : -50) : 0),
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: isDrawerOpen
+                  ? BorderRadius.circular(40)
+                  : BorderRadius.circular(0),
+            ),
+            child: Scaffold(
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                leading: IconButton(
+                  icon: Icon(
+                    isDrawerOpen ? Icons.arrow_back_ios : Icons.menu,
+                    color: Colors.black,
+                  ),
+                  onPressed: _toggleDrawer,
+                ),
+                actions: [
+                  CupertinoSwitch(
+                    value: isLocationServiceEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        isLocationServiceEnabled = value;
+                      });
+                      if (value) {
+                        _locationServices.getlocation();
+                      } else {
+                        _locationServices.stopLocationUpdates();
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.location_searching),
+                    onPressed: () {
+                      _mapController.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(
+                              _locationServices.lat.value == 0.0
+                                  ? 30.3753
+                                  : _locationServices.lat.value,
+                              _locationServices.long.value == 0.0
+                                  ? 69.3451
+                                  : _locationServices.long.value,
+                            ),
+                            zoom: _currentZoom,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              body: StreamBuilder(
+                stream:
+                    FirebaseFirestore.instance.collection('users').snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData) {
+                    try {
+                      _createMarkersFromData(snapshot.data!).then((markers) {
+                        if (mounted) {
+                          setState(() {
+                            _markers = {...markers};
+                          });
+                        }
+                      });
+                    } catch (e) {
+                      if (kDebugMode) {
+                        print("W100 ${e.toString()}");
+                      }
+                    }
+                    return Obx(() {
+                      return GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(
+                            _locationServices.lat.value == 0.0
+                                ? 30.3753
+                                : _locationServices.lat.value,
+                            _locationServices.long.value == 0.0
+                                ? 69.3451
+                                : _locationServices.long.value,
+                          ),
+                          zoom: _currentZoom,
+                        ),
+                        onMapCreated:
+                            (GoogleMapController googlemapcontroller) {
+                          _mapController = googlemapcontroller;
+                          _updateMarkers();
+                        },
+                        onCameraMove: (CameraPosition position) {
+                          _currentZoom = position.zoom;
+                          _updateMarkers();
+                        },
+                        // mapType: MapType.hybrid,
+                        myLocationButtonEnabled: true,
+                        markers: _markers,
+                      );
+                    });
+                  } else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
