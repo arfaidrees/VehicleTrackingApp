@@ -6,6 +6,9 @@
         android:label="Vehicle tracking"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBcfwu-Rj73Gr9dvOvN_rCMmGDn-Mmp024"/>
         <activity

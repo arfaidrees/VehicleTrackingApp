@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vehicle_tracking_app/components/Screens/signup_page.dart';
+
 import '../common/custom_scaffold.dart';
 import '../common/welcome_button.dart';
 import 'login_page.dart';
@@ -19,7 +20,7 @@ class WelcomeScreen extends StatelessWidget {
                 vertical: 0,
                 horizontal: 40.0,
               ),
-              child: Center(
+              child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -30,18 +31,18 @@ class WelcomeScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 50.0,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xff520521),
+                        color: Color(0xff520521),
                       ),
                     ),
                     // 'Vehicle Tracking App' with smaller font
-                    const SizedBox(height: 20.0), // Add gap between the texts
+                    SizedBox(height: 20.0), // Add gap between the texts
                     Text(
                       'Vehicle Tracking App',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 23.0,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xff520521),
+                        color: Color(0xff520521),
                       ),
                     ),
                   ],
@@ -58,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: WelcomeButton(
                         buttonText: 'Sign in',
                         onTap: LoginPage(),
@@ -70,10 +71,10 @@ class WelcomeScreen extends StatelessWidget {
                     Container(
                       width: 130,
                       height: 70,
-                      child: WelcomeButton(
+                      child: const WelcomeButton(
                         buttonText: 'Sign up',
-                        onTap: const SignupPage(),
-                        color: const Color(0xff520521),
+                        onTap: SignupPage(),
+                        color: Color(0xff520521),
                         textColor: Colors.white,
                       ),
                     ),

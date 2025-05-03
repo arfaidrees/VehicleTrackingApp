@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -59,20 +58,20 @@ class Menu extends StatelessWidget {
                       onTap: () {
                         switch (rowData['text']) {
                           case 'Profile':
-                            Get.to(ProfilePage());
+                            Get.to(() => ProfilePage());
                             break;
                           case 'About':
-                            Get.to(const AboutPage());
+                            Get.to(() => const AboutPage());
                             break;
                           case 'Help':
-                          Get.to(const HelpPage());
-
+                            Get.to(() => const HelpPage());
                             break;
                           default:
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text(
-                                      '${rowData['text']} is not implemented yet!')),
+                                content: Text(
+                                    '${rowData['text']} is not implemented yet!'),
+                              ),
                             );
                         }
                       },

@@ -1,16 +1,14 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:vehicle_tracking_app/components/Screens/menu.dart';
 import 'package:widget_to_marker/widget_to_marker.dart';
 
 import '../../Location/location.dart';
 import '../../Location/marker.dart';
+import 'menu.dart';
 
 class MapScreen extends StatefulWidget {
   @override
@@ -30,9 +28,12 @@ class _MapScreenState extends State<MapScreen> {
 
   bool get isRtl => Localizations.localeOf(context).languageCode == 'ur';
 
+  ValueNotifier<Set<Marker>> _markerNotifier = ValueNotifier<Set<Marker>>({});
+
   @override
   void initState() {
     super.initState();
+    _markerNotifier.value = _markers;
   }
 
   Future<Set<Marker>> _createMarkersFromData(QuerySnapshot snapshot) async {
@@ -50,7 +51,6 @@ class _MapScreenState extends State<MapScreen> {
               logicalSize: Size(markerSize, markerSize),
               imageSize: Size(markerSize, markerSize)),
           infoWindow: InfoWindow(title: doc['email']),
-          // rotation: 200.0,
         );
       }
       return null;
@@ -67,23 +67,30 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     _mapController.dispose();
-    _locationServices.dispose();
+    if (Get.isRegistered<LocationController>()) {
+      _locationServices.dispose();
+    }
+    _markerNotifier.dispose();
     super.dispose();
     if (kDebugMode) {
       print("MapScreen disposed");
     }
   }
 
-  void _updateMarkers() async {
-    QuerySnapshot snapshot =
-        await FirebaseFirestore.instance.collection('users').get();
-    _createMarkersFromData(snapshot).then((markers) {
+  void _updateMarkersFromSnapshot(QuerySnapshot snapshot) async {
+    try {
+      final markers = await _createMarkersFromData(snapshot);
       if (mounted) {
         setState(() {
           _markers = {...markers};
+          _markerNotifier.value = _markers;
         });
       }
-    });
+    } catch (e) {
+      if (kDebugMode) {
+        print("W100 ${e.toString()}");
+      }
+    }
   }
 
   void _toggleDrawer() {
@@ -168,46 +175,34 @@ class _MapScreenState extends State<MapScreen> {
                     FirebaseFirestore.instance.collection('users').snapshots(),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
-                    try {
-                      _createMarkersFromData(snapshot.data!).then((markers) {
-                        if (mounted) {
-                          setState(() {
-                            _markers = {...markers};
-                          });
-                        }
-                      });
-                    } catch (e) {
-                      if (kDebugMode) {
-                        print("W100 ${e.toString()}");
-                      }
-                    }
-                    return Obx(() {
-                      return GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: LatLng(
-                            _locationServices.lat.value == 0.0
-                                ? 30.3753
-                                : _locationServices.lat.value,
-                            _locationServices.long.value == 0.0
-                                ? 69.3451
-                                : _locationServices.long.value,
+                    _updateMarkersFromSnapshot(snapshot.data!);
+                    return ValueListenableBuilder<Set<Marker>>(
+                      valueListenable: _markerNotifier,
+                      builder: (context, markers, child) {
+                        return GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: LatLng(
+                              _locationServices.lat.value == 0.0
+                                  ? 30.3753
+                                  : _locationServices.lat.value,
+                              _locationServices.long.value == 0.0
+                                  ? 69.3451
+                                  : _locationServices.long.value,
+                            ),
+                            zoom: _currentZoom,
                           ),
-                          zoom: _currentZoom,
-                        ),
-                        onMapCreated:
-                            (GoogleMapController googlemapcontroller) {
-                          _mapController = googlemapcontroller;
-                          _updateMarkers();
-                        },
-                        onCameraMove: (CameraPosition position) {
-                          _currentZoom = position.zoom;
-                          _updateMarkers();
-                        },
-                        // mapType: MapType.hybrid,
-                        myLocationButtonEnabled: true,
-                        markers: _markers,
-                      );
-                    });
+                          onMapCreated:
+                              (GoogleMapController googlemapcontroller) {
+                            _mapController = googlemapcontroller;
+                          },
+                          onCameraMove: (CameraPosition position) {
+                            _currentZoom = position.zoom;
+                          },
+                          myLocationButtonEnabled: true,
+                          markers: markers,
+                        );
+                      },
+                    );
                   } else {
                     return const Center(
                       child: CircularProgressIndicator(),

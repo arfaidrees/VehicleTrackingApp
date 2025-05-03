@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:vehicle_tracking_app/components/Screens/login_page.dart';
@@ -35,14 +36,42 @@ class FirebaseRepository {
     }
   }
 
+  void subscribeToTopic() async {
+    String topic = 'alart';
+    FirebaseMessaging.instance.subscribeToTopic(topic);
+    if (kDebugMode) {
+      print('Subscribed to topic: $topic');
+    }
+  }
+
+  void unSubscribeToTopic() async {
+    String topic = 'alart';
+    FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+    if (kDebugMode) {
+      print('Unsubscribed from topic: $topic');
+    }
+  }
+
   // Login with email and password
   Future<String?> signInWithEmailAndPassword(
       String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(
+      await _auth
+          .signInWithEmailAndPassword(
         email: email,
         password: password,
-      );
+      )
+          .then((userCredential) {
+        if (kDebugMode) {
+          print('User signed in: ${userCredential.user}');
+          subscribeToTopic();
+        }
+      }).catchError((error) {
+        if (kDebugMode) {
+          print('Error signing in: $error');
+        }
+        Get.snackbar('Info', error.toString());
+      });
       return null; // No error
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -92,6 +121,7 @@ class FirebaseRepository {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+      unSubscribeToTopic();
       Get.off(const LoginPage());
     } catch (e) {
       Get.snackbar('Info', e.toString());
