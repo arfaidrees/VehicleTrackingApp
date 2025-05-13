@@ -1,4 +1,3 @@
-// login_page.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,14 +25,71 @@ class _LoginPageState extends State<LoginPage> {
   final _locationController = Get.put(LocationController());
   RxBool isLoading = false.obs;
 
+  // Inside the _LoginPageState class
+
   Future<void> _handleLoginUser() async {
+    // First validate if fields are empty
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            backgroundColor: Colors.white,
+            title: const Text(
+              'Sign Up Required',
+              style: TextStyle(
+                color: Color(0xff520521),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: const Text(
+              'Please sign up first to access your account.',
+              style: TextStyle(color: Colors.black54),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SignupPage(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Sign Up Now',
+                  style: TextStyle(
+                    color: Color(0xff520521),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.black54),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    // Original login logic for non-empty fields
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Submitting data...')),
     );
+
     if (_loginFormKey.currentState!.validate()) {
       isLoading.value = true;
-      String? errorMessage =
-          await _firebaseRepository.signInWithEmailAndPassword(
+      String? errorMessage = await _firebaseRepository.signInWithEmailAndPassword(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
@@ -52,7 +108,6 @@ class _LoginPageState extends State<LoginPage> {
       isLoading.value = false;
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,6 +135,12 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Image.asset(
+                        'assets/images/vta.png',
+                        height: 170,
+                        width: 170,
+                      ),
+                      const SizedBox(height: 10),
                       const Text(
                         'Welcome Back',
                         style: TextStyle(
@@ -175,7 +236,7 @@ class _LoginPageState extends State<LoginPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const ForgetPasswordPage(),
+                                const ForgetPasswordPage(),
                               ),
                             ),
                             child: const Text(
@@ -194,17 +255,17 @@ class _LoginPageState extends State<LoginPage> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xff520521),
-                            foregroundColor: Colors.white, // Text color
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           onPressed: _handleLoginUser,
                           child: Obx(
-                            () => isLoading.value
+                                () => isLoading.value
                                 ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
+                              color: Colors.white,
+                            )
                                 : const Text('Login'),
                           ),
                         ),
