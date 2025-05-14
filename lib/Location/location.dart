@@ -18,7 +18,7 @@ class LocationController extends GetxController {
   RxDouble lat = 0.0.obs;
   RxDouble bearing = 0.0.obs;
   late StreamController<Position> _positionStreamController;
-  late StreamSubscription<Position> _positionSubscription;
+  StreamSubscription<Position>? _positionSubscription; // Made nullable
   late FirebaseFirestore fireStore;
   late FirebaseAuth _auth;
   String? uid;
@@ -30,7 +30,6 @@ class LocationController extends GetxController {
   }
 
   Future<void> initFirebaseAndLocation() async {
-    // getCurrentLocation();
     _auth = FirebaseAuth.instance;
     fireStore = FirebaseFirestore.instance;
     uid = _auth.currentUser!.uid;
@@ -73,7 +72,9 @@ class LocationController extends GetxController {
         lat.value = snapshot.get('latitude');
         bearing.value = snapshot.get('bearing'); // Get the bearing
       } else {
-        print("User not Found");
+        if (kDebugMode) {
+          print("User not Found");
+        }
       }
     });
   }
@@ -123,9 +124,13 @@ class LocationController extends GetxController {
         .doc(uid)
         .set(locationData.toJson())
         .then((value) {
-      print('Location Update');
+      if (kDebugMode) {
+        print('Location Update');
+      }
     }).onError((error, stackTrace) {
-      print("Error $error");
+      if (kDebugMode) {
+        print("Error $error");
+      }
     });
   }
 
@@ -139,32 +144,28 @@ class LocationController extends GetxController {
   }
 
   void stopLocationUpdates() {
+    deleteLocation();
     if (_positionSubscription != null) {
-      deleteLocation();
-      _positionSubscription.cancel();
+      _positionSubscription!.cancel();
     }
   }
 
   @override
   void dispose() {
-    if (_positionSubscription != null) {
-      _positionSubscription.cancel();
-    }
-    if (_positionStreamController != null) {
+    if (!isClosed) {
+      if (_positionSubscription != null) {
+        _positionSubscription!.cancel();
+      }
       _positionStreamController.close();
+      deleteLocation();
     }
-    deleteLocation();
     super.dispose();
-    if (kDebugMode) {
-      print("Location disposed");
-    }
   }
 
   void signOut() async {
     stopLocationUpdates();
-    deleteLocation();
     await _auth.signOut();
     Get.offAll(const LoginPage());
-    dispose();
+    // dispose();
   }
 }

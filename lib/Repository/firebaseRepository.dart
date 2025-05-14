@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:vehicle_tracking_app/components/Screens/login_page.dart';
+
+import '../Location/location.dart';
 
 class FirebaseRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -42,13 +43,20 @@ class FirebaseRepository {
     if (kDebugMode) {
       print('Subscribed to topic: $topic');
     }
+    Get.snackbar("Subscribe", "Subscribed to topic: $topic");
   }
 
   void unSubscribeToTopic() async {
-    String topic = 'alart';
-    FirebaseMessaging.instance.unsubscribeFromTopic(topic);
-    if (kDebugMode) {
-      print('Unsubscribed from topic: $topic');
+    try {
+      String topic = 'alart';
+      FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+      if (kDebugMode) {
+        print('Unsubscribed from topic: $topic');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error unsubscribing from topic: $e');
+      }
     }
   }
 
@@ -62,14 +70,10 @@ class FirebaseRepository {
         password: password,
       )
           .then((userCredential) {
-        if (kDebugMode) {
-          print('User signed in: ${userCredential.user}');
-          subscribeToTopic();
-        }
+        print('User signed in: ${userCredential.user}');
+        subscribeToTopic();
       }).catchError((error) {
-        if (kDebugMode) {
-          print('Error signing in: $error');
-        }
+        print('Error signing in: $error');
         Get.snackbar('Info', error.toString());
       });
       return null; // No error
@@ -120,9 +124,12 @@ class FirebaseRepository {
   // Sign out
   Future<void> signOut() async {
     try {
-      await _auth.signOut();
+      final _locationServices = Get.find<LocationController>();
       unSubscribeToTopic();
-      Get.off(const LoginPage());
+      _locationServices.signOut();
+      // await _auth.signOut();
+
+      // Get.off(const LoginPage());
     } catch (e) {
       Get.snackbar('Info', e.toString());
       if (kDebugMode) {
