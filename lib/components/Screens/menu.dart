@@ -5,6 +5,7 @@ import '../../Repository/firebaseRepository.dart';
 import 'Help.dart';
 import 'Profile.dart';
 import 'about.dart';
+import 'driverhistory.dart'; // Import the new history page
 
 class Menu extends StatelessWidget {
   @override
@@ -13,6 +14,7 @@ class Menu extends StatelessWidget {
       {'text': 'Profile', 'icon': Icons.person_outline},
       {'text': 'About', 'icon': Icons.info_outline},
       {'text': 'Help', 'icon': Icons.help_center_outlined},
+      {'text': 'History', 'icon': Icons.history}, // Added History option
     ];
     final FirebaseRepository _firebaseRepository = FirebaseRepository();
 
@@ -23,84 +25,97 @@ class Menu extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            // Header with Avatar and Menu Title
-            Row(
-              children: <Widget>[
-                CircleAvatar(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: const Image(
-                      fit: BoxFit.cover,
-                      image: AssetImage('assets/images/vta.png'),
+            Column(
+              children: [
+                // Header with Avatar and Menu Title
+                Row(
+                  children: <Widget>[
+                    CircleAvatar(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: const Image(
+                          fit: BoxFit.cover,
+                          image: AssetImage('assets/images/vta.png'),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 120, width: 10),
+                    const Text(
+                      'Setting',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 120, width: 10),
-                const Text(
-                  'Setting',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+
+                const SizedBox(height: 40),
+
+                // Menu Items
+                Column(
+                  children: rowsData.map((rowData) {
+                    return Column(
+                      children: [
+                        NewRow(
+                          text: rowData['text'],
+                          icon: rowData['icon'],
+                          onTap: () {
+                            switch (rowData['text']) {
+                              case 'Profile':
+                                Get.to(() => ProfilePage());
+                                break;
+                              case 'About':
+                                Get.to(() => const AboutPage());
+                                break;
+                              case 'Help':
+                                Get.to(() => const HelpPage());
+                                break;
+                              case 'History': // Added History case
+                                Get.to(() => const DriverHistoryPage());
+                                break;
+                              default:
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        '${rowData['text']} is not implemented yet!'),
+                                  ),
+                                );
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    );
+                  }).toList(),
+                ),
+
+                // Logout Row - Moved up
+                const SizedBox(height: 40),
+                InkWell(
+                  onTap: () {
+                    _firebaseRepository.signOut();
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.logout,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Log Out',
+                        style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
 
-            // Menu Items
-            Column(
-              children: rowsData.map((rowData) {
-                return Column(
-                  children: [
-                    NewRow(
-                      text: rowData['text'],
-                      icon: rowData['icon'],
-                      onTap: () {
-                        switch (rowData['text']) {
-                          case 'Profile':
-                            Get.to(() => ProfilePage());
-                            break;
-                          case 'About':
-                            Get.to(() => const AboutPage());
-                            break;
-                          case 'Help':
-                            Get.to(() => const HelpPage());
-                            break;
-                          default:
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    '${rowData['text']} is not implemented yet!'),
-                              ),
-                            );
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                );
-              }).toList(),
-            ),
-
-            // Logout Row
-            InkWell(
-              onTap: () {
-                _firebaseRepository.signOut();
-              },
-              child: Row(
-                children: <Widget>[
-                  Icon(
-                    Icons.logout,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Log Out',
-                    style: TextStyle(color: Colors.white.withOpacity(0.5)),
-                  ),
-                ],
-              ),
-            ),
+            // Empty container to maintain space at bottom
+            Container(),
           ],
         ),
       ),

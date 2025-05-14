@@ -30,15 +30,12 @@ class _SignupPageState extends State<SignupPage> {
   late dynamic driveApi;
   late String folderId;
   RxBool isLoading = false.obs;
+  bool _isPasswordVisible = false; // Added for password visibility toggle
 
   initState() {
     super.initState();
     getData();
   }
-
-  // Future<String> loadAsset(String path) async {
-  //   return await rootBundle.loadString(path);
-  // }
 
   getData() async {
     const serviceAccountKey = '''{
@@ -83,16 +80,13 @@ class _SignupPageState extends State<SignupPage> {
       String password = _passwordController.text.trim();
 
       String? errorMessage =
-          await _firebaseRepository.createUserWithEmailAndPassword(
-              email, password, name, contact, profileURL);
+      await _firebaseRepository.createUserWithEmailAndPassword(
+          email, password, name, contact, profileURL);
 
       if (errorMessage == null) {
-        // Successfully signed up
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Signup Successful!')),
         );
-
-        // Navigate to the LoginPage
         Get.off(const LoginPage());
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -126,6 +120,13 @@ class _SignupPageState extends State<SignupPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Logo added here
+                      Image.asset(
+                        'assets/images/vta.png',
+                        height: 170,
+                        width: 170,
+                      ),
+                      const SizedBox(height: 10),
                       const Text(
                         'Create Account',
                         style: TextStyle(
@@ -144,7 +145,7 @@ class _SignupPageState extends State<SignupPage> {
                               : null,
                           child: _profileImage == null
                               ? Icon(Icons.camera_alt,
-                                  size: 40, color: Colors.grey.shade700)
+                              size: 40, color: Colors.grey.shade700)
                               : null,
                         ),
                       ),
@@ -185,11 +186,29 @@ class _SignupPageState extends State<SignupPage> {
                         },
                       ),
                       const SizedBox(height: 15.0),
-                      CustomInputField(
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
+                      TextFormField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Enter your password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password is required';
@@ -200,11 +219,18 @@ class _SignupPageState extends State<SignupPage> {
                       const SizedBox(height: 15.0),
                       Row(
                         children: [
-                          Checkbox(
-                            value: _agreePersonalData,
-                            onChanged: (bool? value) {
-                              setState(() => _agreePersonalData = value!);
-                            },
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              unselectedWidgetColor: Colors.purple, // Border color
+                            ),
+                            child: Checkbox(
+                              value: _agreePersonalData,
+                              onChanged: (bool? value) {
+                                setState(() => _agreePersonalData = value!);
+                              },
+                              activeColor: Colors.purple, // Checked color
+                              checkColor: Colors.white, // Check mark color
+                            ),
                           ),
                           const Expanded(
                             child: Text(
@@ -219,12 +245,10 @@ class _SignupPageState extends State<SignupPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(
-                                0xff520521), // Button background color
-                            foregroundColor: Colors.white, // Text color
+                            backgroundColor: const Color(0xff520521),
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  10), // Optional: for rounded corners
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           onPressed: () async {
@@ -236,11 +260,11 @@ class _SignupPageState extends State<SignupPage> {
                                   await _handleSignupUser();
                                 } else {
                                   String url =
-                                      await driveRepository.uploadImageToFolder(
-                                          driveApi,
-                                          folderId,
-                                          _profileImage!,
-                                          _emailController.text);
+                                  await driveRepository.uploadImageToFolder(
+                                      driveApi,
+                                      folderId,
+                                      _profileImage!,
+                                      _emailController.text);
                                   await _handleSignupUser(profileURL: url);
                                 }
                               } finally {
@@ -255,10 +279,10 @@ class _SignupPageState extends State<SignupPage> {
                             }
                           },
                           child: Obx(
-                            () => isLoading.value == true
+                                () => isLoading.value == true
                                 ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
+                              color: Colors.white,
+                            )
                                 : const Text('Sign Up'),
                           ),
                         ),
